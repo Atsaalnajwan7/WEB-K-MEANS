@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Vehicle Clustering | Mobile AI</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,500;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            transition: background 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            scroll-snap-type: y mandatory;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* mode warna premium + adaptif hp */
+        .light-mode {
+            background: radial-gradient(circle at 10% 20%, rgb(248, 250, 252), rgb(230, 242, 255));
+            color: #0a0c10;
+        }
+
+        .dark-mode {
+            background: radial-gradient(circle at 80% 10%, #10171f, #03060b);
+            color: #eef2ff;
+        }
+
+        .blue-mode {
+            background: radial-gradient(circle at 30% 80%, #001d3d, #000814);
+            color: #e0f2fe;
+        }
+
+        .purple-mode {
+            background: radial-gradient(circle at 70% 90%, #071a0e, #021a0b, #010b05);
+            color: #d9f2e6;
+        }
+
+        /* SNAP + BETTER TOUCH */
+        .hero, .section {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        /* HERO SECTION — FULLSCREEN MOBILE FIRST */
+        .hero {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            backdrop-filter: brightness(0.98);
+            text-align: center;
+            gap: 1.5rem;
+        }
+
+        /* ====== VEHICLE CLUSTERING TITLE WARNA HITAM ====== */
+        .hero h1 {
+            font-size: clamp(2.2rem, 10vw, 3.8rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            /* Warna HITAM solid dengan sedikit bayangan agar tetap terbaca di background apapun */
+            color: #000000 !important;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.3), 0 0 0 rgba(0,0,0,0.1);
+        }
+
+        /* Efek kursor tetap kelihatan dengan warna hitam */
+        .cursor::after {
+            content: "|";
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+            color: #000000 !important;
+            font-weight: 800;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            font-weight: 500;
+            opacity: 0.9;
+            max-width: 85%;
+        }
+
+        /* UPLOAD BOX TOUCH FRIENDLY */
+        .upload-box {
+            border: 2px dashed rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            padding: 2rem 1.5rem;
+            border-radius: 2rem;
+            text-align: center;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            width: 90%;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .upload-box:active {
+            transform: scale(0.98);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .upload-box input {
+            display: block;
+            margin: 1rem auto 0;
+            font-size: 0.9rem;
+            width: 100%;
+            background: transparent;
+            color: inherit;
+            border: none;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: #ffffffcc;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+        }
+
+        button {
+            margin-top: 1.2rem;
+            padding: 14px 32px;
+            border: none;
+            background: #000000dd;
+            backdrop-filter: blur(4px);
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: auto;
+            min-width: 180px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: scale(0.96);
+            background: #000;
+        }
+
+        /* section umum untuk mobile nyaman */
+        .section {
+            min-height: 80vh;
+            width: 100%;
+            max-width: 100%;
+            padding: 3rem 1.5rem;
+            margin: 0 auto;
+            scroll-snap-align: start;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 1.8rem;
+
+            opacity: 0;
+            transform: translateY(35px) scale(0.97);
+            filter: blur(6px);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.7s ease, filter 0.5s ease;
+        }
+
+        .section.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+
+        /* gambar hasil clustering — responsif & tajam */
+        .section img {
+            width: 100%;
+            max-width: 550px;
+            border-radius: 32px;
+            box-shadow: 0 25px 40px -12px rgba(0,0,0,0.35);
+            background: #ffffff10;
+            backdrop-filter: blur(2px);
+            object-fit: contain;
+            margin-top: 0.5rem;
+        }
+
+        /* Tabel data preview — mobile friendly scroll */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 24px;
+            background: rgba(10, 10, 20, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            min-width: 450px;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(0,0,0,0.25);
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        th {
+            font-weight: 700;
+            background: rgba(255,255,255,0.08);
+            font-size: 0.85rem;
+        }
+
+        /* Silhouette score prominent */
+        .score-card {
+            background: linear-gradient(145deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1));
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 1.2rem 2.5rem;
+            font-size: clamp(2.8rem, 12vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
+        }
+
+        .error-box {
+            background: #ff3b30cc;
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 60px;
+            margin-top: 1.25rem;
+            text-align: center;
+            font-weight: 500;
+            max-width: 90%;
+        }
+
+        /* LOADING indikator mobile premium */
+        #loading {
+            display: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            color: white;
+            top: 0;
+            left: 0;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(255,255,255,0.2);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* text animasi per huruf lebih halus */
+        .text-animate span {
+            opacity: 0;
+            display: inline-block;
+            transform: translateY(25px);
+            animation: slideUpReveal 0.4s forwards;
+            color: #000000 !important; /* WARNA HITAM UNTUK SETIAP HURUF */
+        }
+
+        @keyframes slideUpReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-text {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.7s ease, transform 0.6s ease;
+        }
+
+        .fade-text.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* gesture friendly */
+        button, .upload-box, input {
+            touch-action: manipulation;
+        }
+
+        /* smooth snap on mobile */
+        @media (max-width: 680px) {
+            .hero {
+                padding: 1.8rem 1.2rem;
+            }
+            .section {
+                padding: 2rem 1rem;
+            }
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* tambahan styling untuk memastikan judul utama tetap hitam di semua mode */
+        .light-mode .hero h1,
+        .dark-mode .hero h1,
+        .blue-mode .hero h1,
+        .purple-mode .hero h1 {
+            color: #000000 !important;
+            text-shadow: 0 1px 3px rgba(255,255,255,0.4);
+        }
+
+        /* efek hover pada tombi tetap aman */
+        button:hover {
+            transform: scale(1.02);
+            background: #111;
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+<div id="loading">
+    <div class="spinner"></div>
+    <span>✨ Clustering Vehicles ✨</span>
+</div>
+
+<!-- HERO MOBILE FIRST -->
+<div class="hero" id="heroParallax">
+    <h1 class="text-animate cursor" id="heroText">Vehicle Clustering</h1>
+    <p class="fade-text show">K‑Means AI · Analisis Kendaraan Cerdas</p>
+
+    <form method="POST" enctype="multipart/form-data" id="uploadForm" onsubmit="showLoading(); return true;">
+        <div class="upload-box" id="drop-area">
+            📂 <strong>Sentuh atau seret CSV</strong>
+            <input type="file" name="file" id="fileInput" accept=".csv" required>
+        </div>
+        <button type="submit">🚀 Process Data</button>
+    </form>
+
+    {% if error_msg %}
+    <div class="error-box">
+        ⚠️ {{ error_msg }}
+    </div>
+    {% endif %}
+</div>
+
+{% if sil_score %}
+<div class="section" id="silSection">
+    <h2 class="fade-text">📊 Silhouette Score</h2>
+    <div class="score-card">{{ sil_score }}</div>
+    <p class="fade-text">Validasi kualitas cluster kendaraan</p>
+</div>
+{% endif %}
+
+{% if plot_url %}
+<div class="section" id="plotSection">
+    <h2 class="fade-text">🎯 Visualisasi Cluster</h2>
+    <img src="{{ plot_url }}" alt="K-Means Clustering Plot" loading="lazy">
+    <p class="fade-text">Segmentasi kendaraan berdasarkan fitur</p>
+</div>
+{% endif %}
+
+{% if table_data %}
+<div class="section" id="tableSection">
+    <h2 class="fade-text">📋 Data Preview (5 baris)</h2>
+    <div class="table-wrapper">
+        {{ table_data|safe }}
+    </div>
+    <p class="fade-text">* Dataset teratas — siap analisis lebih lanjut</p>
+</div>
+{% endif %}
+
+<script>
+    // enhanced loading & form validation untuk mobile
+    function showLoading() {
+        const fileInput = document.getElementById('fileInput');
+        if (!fileInput.files.length) {
+            alert("📁 Pilih file CSV terlebih dahulu!");
+            return false;
+        }
+        document.getElementById("loading").style.display = "flex";
+        return true;
+    }
+
+    // Background mode berubah berdasarkan scroll (mobile optimized)
+    function updateThemeByScroll() {
+        let scrollY = window.scrollY;
+        let body = document.body;
+        let winHeight = window.innerHeight;
+
+        if (scrollY < winHeight * 0.3) body.className = "light-mode";
+        else if (scrollY < winHeight * 1.2) body.className = "dark-mode";
+        else if (scrollY < winHeight * 2.2) body.className = "blue-mode";
+        else body.className = "purple-mode";
+    }
+
+    window.addEventListener("scroll", () => {
+        updateThemeByScroll();
+        // parallax halus untuk hero (mobile aman)
+        const heroBg = document.getElementById('heroParallax');
+        let scrollPos = window.scrollY;
+        if (heroBg) {
+            heroBg.style.backgroundPositionY = (scrollPos * 0.25) + "px";
+        }
+    });
+
+    // Intersection Observer untuk section animasi (lebih ringan daripada scroll event)
+    const sections = document.querySelectorAll(".section");
+    const fadeElements = document.querySelectorAll(".fade-text");
+
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: "0px 0px -30px 0px"
+    };
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("show");
+                // juga aktifkan fade-text di dalam section
+                const innerFades = entry.target.querySelectorAll('.fade-text');
+                innerFades.forEach(el => el.classList.add('show'));
+                sectionObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    sections.forEach(section => {
+        sectionObserver.observe(section);
+    });
+
+    // Fade-text global di hero dan lainnya
+    const globalFade = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+                globalFade.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    fadeElements.forEach(el => {
+        globalFade.observe(el);
+    });
+
+    // Animasi teks per huruf di hero dengan WARNA HITAM
+    const heroTitle = document.getElementById("heroText");
+    if (heroTitle) {
+        const originalText = heroTitle.innerText;
+        heroTitle.innerHTML = "";
+        [...originalText].forEach((char, idx) => {
+            let span = document.createElement("span");
+            span.innerText = char === " " ? "\u00A0" : char;
+            span.style.animationDelay = `${idx * 0.03}s`;
+            span.style.display = "inline-block";
+            span.style.color = "#000000"; // WARNA HITAM
+            span.style.fontWeight = "800";
+            heroTitle.appendChild(span);
+        });
+        heroTitle.classList.add("cursor");
+    }
+
+    // Drag and Drop + touch (mobile friendly)
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("fileInput");
+
+    if (dropArea) {
+        // mencegah default dragover
+        ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // highlight
+        ["dragenter", "dragover"].forEach(event => {
+            dropArea.addEventListener(event, () => {
+                dropArea.style.borderColor = "#ffffff";
+                dropArea.style.background = "rgba(255,255,255,0.2)";
+            });
+        });
+        ["dragleave", "drop"].forEach(event => {
+            dropArea.addEventListener(event, () => {
+                dropArea.style.borderColor = "rgba(255,255,255,0.5)";
+                dropArea.style.background = "rgba(255,255,255,0.08)";
+            });
+        });
+
+        // drop event untuk file
+        dropArea.addEventListener("drop", (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                fileInput.files = files;
+                // visual feedback
+                dropArea.style.background = "rgba(100,200,100,0.2)";
+                setTimeout(() => {
+                    dropArea.style.background = "rgba(255,255,255,0.08)";
+                }, 200);
+            }
+        });
+
+        // sentuh area untuk trigger file picker (mobile friendly)
+        dropArea.addEventListener("click", (e) => {
+            if (e.target !== fileInput) {
+                fileInput.click();
+            }
+        });
+    }
+
+    // auto submit handling? form tetap traditional post, loading indikator sudah baik
+    // tambahkan validasi ekstra di form submit
+    const formEl = document.getElementById("uploadForm");
+    if (formEl) {
+        formEl.addEventListener("submit", function(e) {
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert("📁 Silakan pilih file CSV untuk diproses.");
+                return false;
+            }
+            showLoading();
+        });
+    }
+
+    // ** PERBAIKAN MOBILE: touch ripple & prevent double tap zoom pada button opsional
+    const allButtons = document.querySelectorAll("button");
+    allButtons.forEach(btn => {
+        btn.addEventListener("touchstart", function() {
+            this.style.transform = "scale(0.97)";
+        }, { passive: true });
+        btn.addEventListener("touchend", function() {
+            this.style.transform = "";
+        });
+    });
+
+    // jika ada Silhouette section muncul tanpa reload, pastikan observer tetap jalan
+    // Untuk memastikan setiap gambar responsif, tambahkan load handling
+    window.addEventListener('load', () => {
+        // Trigger ulang observer untuk section yang mungkin dinamis (dikirim dari flask)
+        const dynamicSections = document.querySelectorAll(".section");
+        dynamicSections.forEach(sec => {
+            if (!sec.classList.contains('show') && sec.getBoundingClientRect().top < window.innerHeight - 100) {
+                sec.classList.add('show');
+                const innerFades = sec.querySelectorAll('.fade-text');
+                innerFades.forEach(f => f.classList.add('show'));
+            }
+        });
+        updateThemeByScroll();
+    });
+
+    // OPTIMASI: mencegah layout shift & smooth scroll
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                updateThemeByScroll();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+
+    // untuk enhance kecepatan di hp, disable hover effect jika touch
+    if ('ontouchstart' in window) {
+        document.body.style.touchAction = "pan-y pinch-zoom";
+    }
+
+    // Perbaikan interaksi area upload&feedback
+    // menampilkan nama file ketika dipilih via input
+    fileInput.addEventListener("change", function() {
+        if (this.files.length) {
+            let fileName = this.files[0].name;
+            let shortName = fileName.length > 25 ? fileName.slice(0, 22) + "..." : fileName;
+            dropArea.style.borderColor = "#00e0ff";
+            dropArea.style.background = "rgba(0,255,200,0.15)";
+            setTimeout(() => {
+                if(dropArea) dropArea.style.background = "rgba(255,255,255,0.08)";
+            }, 800);
+            // optional set inner text
+            let p = dropArea.querySelector("p");
+            if(p) p.innerHTML = `✅ ${shortName}`;
+            setTimeout(() => {
+                if(p && p.innerHTML.includes(shortName)) p.innerHTML = "Drag & Drop CSV or Click";
+            }, 2500);
+        } else {
+            let p = dropArea.querySelector("p");
+            if(p) p.innerHTML = "Drag & Drop CSV or Click";
+            dropArea.style.borderColor = "rgba(255,255,255,0.5)";
+        }
+    });
+</script>
+
+<!-- Catatan: backend harus menyediakan variabel sil_score, plot_url, table_data, error_msg (Jinja2) -->
+<!-- Jika tidak ada data, bagian tidak akan dirender. Desain mobile super friendly + tulisan Vehicle Clustering WARNA HITAM! -->
+</body>
+</html>
